@@ -2,7 +2,7 @@
 #include <fstream>      // std::fstream
 #include <string>       // std::string
 #include <sstream>      // std::stringstream
-#include <exception> 
+
 int main() 
 {
   std::fstream f("input", std::ios_base::in);
@@ -11,7 +11,6 @@ int main()
   int currentHorizontal = 0; 
   std::string tempLine;
   bool firstLine = true; 
-  // int printLines = 0; 
 
   if(f){
     while(getline(f, tempLine)){  // gets the whole line
@@ -19,20 +18,12 @@ int main()
 
       std::string tempInstr; 
       int tempDistance = 0;  
-      std::string tempItem; 
 
-      while (getline(tempStream, tempItem, ' ')) { 
+      getline(tempStream, tempInstr, ' '); // splits up the rest by space
+      tempStream >> tempDistance; 
 
-        try { // don't love this... 
-          tempDistance = std::stoi(tempItem);
-        } catch (std::exception e) {
-          tempInstr = tempItem; 
-        }
-
-      }
-
-      std::cout << "tempInstr: " << tempInstr  << std::endl;
-      std::cout << "tempDistance: " << tempDistance  << std::endl;
+      // std::cout << "tempInstr: " << tempInstr  << std::endl;
+      // std::cout << "tempDistance: " << tempDistance  << std::endl;
 
       if (tempInstr == "forward") {
         currentHorizontal += tempDistance; 

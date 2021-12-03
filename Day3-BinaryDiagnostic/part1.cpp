@@ -6,11 +6,7 @@
 int main() 
 {
   std::fstream f("input", std::ios_base::in);
-
-  int currentDepth = 0;
-  int currentHorizontal = 0; 
   std::string tempLine;
-  bool firstLine = true; 
 
   // array index 0 corresponds to most significant binary bit 
   int numZeros[12] = {0,0,0,0,0,0,0,0,0,0,0,0}; 
@@ -19,8 +15,10 @@ int main()
   if(f){
     while(getline(f, tempLine)){  // gets the whole line
 
+      // convert to binary, assuming its in base 2
       int tempInt = stoi(tempLine, nullptr, 2); 
 
+      // accumulate for each bit how many 1s and zeros
       for (int i=0, j=11; i<12; i++, j--) {
         if (((tempInt >> j) & 1) == 0) {
           numZeros[i]++;
@@ -39,6 +37,7 @@ int main()
   int gammaRate = 0;
   int epsilonRate = 0; 
   
+  // depending on # ones/zeros, put correct bit into gamma/epsilon
   for (int i=0; i<12; i++) {
     if (numOnes[i] > numZeros[i]) {
       gammaRate = (gammaRate << 1) | 1;

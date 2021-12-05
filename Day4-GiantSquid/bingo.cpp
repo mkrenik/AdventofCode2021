@@ -30,7 +30,6 @@ bool BingoCard::checkForWin() {
       rowSum += marked_grid[i][j]; 
     }
     if (rowSum == GRID_SIZE) {
-      std::cout << "horizontal victory!" << std::endl; 
       return true; 
     }
   }
@@ -42,7 +41,6 @@ bool BingoCard::checkForWin() {
       colSum += marked_grid[i][j]; 
     }
     if (colSum == GRID_SIZE) {
-      std::cout << "vertical victory!" << std::endl; 
       return true; 
     }
   } 
@@ -73,4 +71,17 @@ void BingoCard::print() {
     }
     std::cout << std::endl; 
   }
+}
+
+void BingoCard::printMarked() {
+  for (int i = 0; i < GRID_SIZE; i++) {
+    for (int j = 0; j < GRID_SIZE; j++) {
+      std::cout << marked_grid[i][j] << "\t";
+    }
+    std::cout << std::endl; 
+  }
+}
+
+void BingoCard::printLastMarked() {
+  std::cout << lastMarked << std::endl;   
 }

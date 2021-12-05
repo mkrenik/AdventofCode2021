@@ -11,7 +11,9 @@ class BingoCard {
   bool checkForWin(); 
   int calculateScore(); 
   void print(); 
-
+  void printMarked();
+  void printLastMarked(); 
+  
   private:
   std::array<std::array<int, GRID_SIZE>, GRID_SIZE> grid; 
   std::array<std::array<int, GRID_SIZE>, GRID_SIZE> marked_grid; 

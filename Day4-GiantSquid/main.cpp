@@ -31,11 +31,13 @@ int main()
       intArray.push_back(std::stoi(elem)); 
     }
 
+    std::cout << intArray.size() << std::endl; 
+
     // debug: print int array
-    for (auto &elem : intArray) {
-      std::cout << elem << "\t";  
-    }
-    std::cout << std::endl; 
+    // for (auto &elem : intArray) {
+    //   std::cout << elem << "\t";  
+    // }
+    // std::cout << std::endl; 
 
     // Read in the bingo boards 
     // TODO: this is very messy 
@@ -73,14 +75,35 @@ int main()
 
   f.close();
 
+  bool isFirst = true; 
+  bool isLast = false; 
+  int turn_number = 0; 
   for (auto &drawn : intArray) {
+    turn_number++;
+    std::vector<BingoCard> not_won_yet; 
+    std::cout << "#" << turn_number << ": " << bingoCards.size() << " left, " << drawn << " drawn." << std::endl; 
     for (auto &card : bingoCards) {
+      if (bingoCards.size() == 1) {
+        isLast = true; 
+      }
+
       card.markNumber(drawn); 
-      if (card.checkForWin()) {
-        std::cout << "Winning card score: " << card.calculateScore() << std::endl; 
-        return 0; 
+
+      if (!card.checkForWin()) {
+        not_won_yet.push_back(card);
+        continue;   
+      }
+
+      if (isFirst) {
+        std::cout << "First to win card score: " << card.calculateScore() << std::endl; 
+        isFirst = false; 
+      }
+      if (isLast) {
+        std::cout << "Last to win card score: " << card.calculateScore() << std::endl; 
+        return 0;
       }
     }
-  }
 
+    bingoCards = not_won_yet; 
+  }
 }

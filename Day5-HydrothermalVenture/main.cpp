@@ -3,6 +3,7 @@
 #include <array> 
 #include <sstream>     
 #include <fstream>
+#include <cmath> 
 
 #define FILE_NAME "input"
 #define GRID_SIZE 1000 
@@ -44,19 +45,12 @@ std::vector<Line> readInput() {
 
       // std::cout << x1 << " " << y1 << " " << x2 << " " << y2 << std::endl;  
 
-      // only allow horizontal / vertical
-      if (x1 == x2 || y1 == y2)  {
-        if (x2 < x1 || y2 < y1) {
-          Line newLine(x2, x1, y2, y1); 
-          inputs.push_back(newLine); 
-        } else {
-          Line newLine(x1, x2, y1, y2); 
-          inputs.push_back(newLine); 
-        }
-      }
+      Line newLine(x1, x2, y1, y2); 
+      inputs.push_back(newLine); 
+
       number_lines++; 
     }
-    // std::cout << "Valid: " << inputs.size() << ", total: " << number_lines << std::endl; 
+    std::cout << "Total Lines: " << number_lines << std::endl; 
   } else {
     std::cout << "Error: couldn't open file" << std::endl;
   }
@@ -64,19 +58,68 @@ std::vector<Line> readInput() {
   return inputs; 
 }
 
-void plotLines(std::array<std::array<short int, GRID_SIZE>, GRID_SIZE>& grid , std::vector<Line> lines) {
-  for (auto & elem : lines) {
-    // std::cout << "Line: (" << elem.x1 << "," << elem.y1 << ") (" << elem.x2 << "," << elem.y2 << ")" << std::endl; 
-    // std::cout << "Points marked: "; 
-    for (int i=elem.x1; i<=elem.x2; i++){
-      for (int j=elem.y1; j<=elem.y2; j++) {
-        grid[i][j]++; 
-        // std::cout << "(" << i << "," << j << ") "; 
-      }
+void plotOrtho(std::array<std::array<short int, GRID_SIZE>, GRID_SIZE>& grid, int x1, int y1, int x2, int y2) {
+  for (int i=x1; i<=x2; i++){
+    for (int j=y1; j<=y2; j++) {
+      grid[i][j]++; 
     }
-    // std::cout << std::endl; 
   }
 }
+
+void plotLines(std::array<std::array<short int, GRID_SIZE>, GRID_SIZE>& grid , std::vector<Line> lines) {
+  int num_ortho_lines = 0;
+  for (auto & elem : lines) {
+    // only allow horizontal / vertical
+    if (elem.x1 == elem.x2 || elem.y1 == elem.y2)  {
+      if (elem.x2 < elem.x1 || elem.y2 < elem.y1) {
+        plotOrtho(grid, elem.x2, elem.y2, elem.x1, elem.y1); // reverse the points 
+      } else {
+        plotOrtho(grid, elem.x1, elem.y1, elem.x2, elem.y2);  
+      }
+      num_ortho_lines++; 
+    } 
+  }
+
+  std::cout << "Ortho Lines: " << num_ortho_lines << std::endl; 
+}
+
+struct Direction {
+  int x, y; 
+
+  Direction(int xdir, int ydir) {
+    if (xdir > 0) x = 1;
+    else x = -1; 
+    if (ydir > 0) y = 1;
+    else y = -1; 
+  }; 
+}; 
+
+void plotDiag(std::array<std::array<short int, GRID_SIZE>, GRID_SIZE>& grid, int x1, int y1, int x2, int y2) {
+
+  Direction dir(x2-x1, y2-y1); 
+
+  std::cout << "Line: (" << x1 << "," << y1 << ") (" << x2 << "," << y2 << ") Dir: " << dir.x << " " <<dir.y << std::endl; 
+  std::cout << "Points marked: "; 
+  // z is a step counter
+  for (int i=x1, j=y1, z=0; z<=std::abs(x2-x1); i+=dir.x, j+=dir.y, z++){
+    grid[i][j]++; 
+    std::cout << "(" << i << "," << j << ") "; 
+  }
+  std::cout << std::endl; 
+}
+
+void plotLinesDiag(std::array<std::array<short int, GRID_SIZE>, GRID_SIZE>& grid , std::vector<Line> lines) {
+  int num_diag_lines = 0;
+  for (auto & elem : lines) {
+    // only allow horizontal / vertical
+    if (elem.x1 != elem.x2 && elem.y1 != elem.y2)  {
+      plotDiag(grid, elem.x1, elem.y1, elem.x2, elem.y2); 
+      num_diag_lines++; 
+    } 
+  }
+  std::cout << "Diag Lines: " << num_diag_lines << std::endl; 
+
+} 
 
 int countPoints(std::array<std::array<short int, GRID_SIZE>, GRID_SIZE>& grid) {
   int count = 0; 
@@ -90,13 +133,16 @@ int countPoints(std::array<std::array<short int, GRID_SIZE>, GRID_SIZE>& grid) {
   return count; 
 }
 
+
 int main() {
   std::vector<Line> lines = readInput(); 
   std::array<std::array<short int, GRID_SIZE>, GRID_SIZE> grid = {}; 
 
   plotLines(grid, lines); 
+  std::cout << "Part 1: " << countPoints(grid) << std::endl; 
 
-  std::cout << countPoints(grid) << std::endl; 
+  plotLinesDiag(grid, lines); 
+  std::cout << "Part 2: " << countPoints(grid) << std::endl; 
 
   return 0; 
 }

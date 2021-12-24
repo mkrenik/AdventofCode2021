@@ -7,40 +7,13 @@
 #include <climits>
 
 #define GEN 40
-
-bool first = true; 
-
-void addPolyAndCount(std::string duplex, std::map<std::string, std::string> &table, std::map<char, int> &count, int generations) {
-  if (generations == GEN) {
-    // add to count and return 
-    if (first) {    // There is a bug here... needs to be reset everytime the initial value slides
-      if (count.contains(duplex[0])) {
-        count[duplex[0]]++; 
-      } else {
-        count.insert(std::pair<char, int>(duplex[0], 1)); 
-      }
-      first = false; 
-    }
-    if (count.contains(duplex[1])) {
-      count[duplex[1]]++; 
-    } else {
-      count.insert(std::pair<char, int>(duplex[1], 1)); 
-    }
-    
-  } else {
-    // recurse
-    std::string addChar = table[duplex];
-    // std::cout << "duplex: " << duplex << "   addChar: " << addChar << std::endl; 
-    addPolyAndCount(duplex[0]+addChar, table, count, generations+1);
-    addPolyAndCount(addChar+duplex[1], table, count, generations+1);
-  }
-}
-
+ 
 int main(int argc, char *argv[]) {
 
   std::string polyTemplate;
   std::map<std::string, std::string> pairRules; 
 
+  // Read input file 
   if (argc == 2) {
     std::fstream f(argv[1], std::ios_base::in); 
     if (f) {
@@ -65,7 +38,7 @@ int main(int argc, char *argv[]) {
     return -1; 
   }
 
-  // // print input
+  // print input
   // std::cout << "Polymer Template: " << polyTemplate << std::endl; 
 
   // std::map<std::string, std::string>::iterator it = pairRules.begin();
@@ -76,28 +49,87 @@ int main(int argc, char *argv[]) {
   //   it++;
   // }
 
+
+  // Put initial values into data structure 
   std::string twoElementIn; 
-  std::map<char, int> finalCount; 
+  std::map<std::string, long int> duplexCount; 
+
+  std::map<std::string, std::string>::iterator init_it = pairRules.begin();
+  while (init_it != pairRules.end()) {
+    duplexCount.insert(std::pair<std::string, long int>(init_it->first, 0)); 
+    init_it++;
+  }
 
   for(int i=0; i<polyTemplate.length()-1; i++) {
-    std::cout << "Sliding " << i << std::endl; 
     twoElementIn = polyTemplate.substr(i, 2);
-    addPolyAndCount(twoElementIn, pairRules, finalCount, 0);   
+    duplexCount[twoElementIn]++; 
   }
 
-  int min=INT_MAX, max=0; 
-  std::map<char, int>::iterator count_it = finalCount.begin();
-  while (count_it != finalCount.end()) {  
-    std::cout << "\t" << count_it->first << ": " << count_it->second; 
-    if(count_it->second > max) {
-      max = count_it->second; 
+  // Advance the polymer steps 
+  for (int i =0; i < GEN; i++) {
+    std::cout << "Gen: " << i << std::endl; 
+
+    // State of dictionary
+    // std::map<std::string, int>::iterator print_it = duplexCount.begin();
+    // while (print_it != duplexCount.end()) {
+    //   std::cout << print_it->first << " -> " << print_it->second << std::endl; 
+    //   print_it++;
+    // }
+
+    // This can be improved-- copying a empty dictionary over to avoid corrupting values mid-step 
+    std::map<std::string, long int> emptyDict;
+    std::map<std::string, std::string>::iterator init_it = pairRules.begin();
+    while (init_it != pairRules.end()) {
+      emptyDict.insert(std::pair<std::string, long int>(init_it->first, 0)); 
+      init_it++;
     }
-    if(count_it->second < min) {
-      min = count_it->second; 
-    }
-    count_it++; 
+
+    // Add polymers 
+    std::map<std::string, long int>::iterator duplexCount_it = duplexCount.begin();
+    while (duplexCount_it != duplexCount.end()) {
+
+      std::string addChar = pairRules[duplexCount_it->first]; 
+      // std::cout << "pair(" << duplexCount_it->first << ") count(" << duplexCount_it->second << ") char (" << addChar << ")" << std::endl;
+
+      // two pairs are increased
+      emptyDict[duplexCount_it->first[0]+addChar] += duplexCount_it->second; 
+      emptyDict[addChar+duplexCount_it->first[1]] += duplexCount_it->second; 
+
+      duplexCount_it++;
+    }  
+
+    duplexCount = emptyDict;  // again, probably not the most efficient...  
+  } 
+
+  long int countsRight[26] = {}; 
+  long int countsLeft[26] = {}; 
+  long int counts[26] = {}; 
+  long int max = 0, min = LONG_MAX; 
+  
+  // we don't know which duplex is on the ends of the sequence
+  // so we count all of the lefts of the duplex which miscounts by 1 on the right
+  // and we count all the of the rights of the duplex which miscounts by 1 on the left 
+  // take the max of both of them for both letters, and we have the final answer! 
+  std::map<std::string, long int>::iterator letterCount_it = duplexCount.begin();
+  while (letterCount_it != duplexCount.end()) {
+    countsLeft[letterCount_it->first[0]-'A'] += letterCount_it->second; 
+    countsRight[letterCount_it->first[1]-'A'] += letterCount_it->second; 
+    letterCount_it++; 
   }
-  std::cout << std::endl; 
+
+  for(int i =0; i< 26; i++) {
+    counts[i] = std::max(countsRight[i], countsLeft[i]);
+  }
+
+
+  for (int i =0; i<26; i++) {
+    if(counts[i] > max) {
+      max = counts[i]; 
+    }
+    if(counts[i] < min && counts[i] != 0) {
+      min = counts[i]; 
+    }
+  }
 
   std::cout << "max(" <<max<<") - min("<<min<<"): " << max-min << std::endl; 
 
